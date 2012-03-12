@@ -18,6 +18,9 @@ import org.apache.commons.httpclient.methods.*;
 import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.border.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
@@ -26,13 +29,11 @@ import java.text.*;
 import java.util.concurrent.*;
 
 /** @author nazmul idris */
-@SuppressWarnings("serial")
-public class SampleApp extends JFrame {
+public class SampleApp extends JFrame implements ActionListener, WindowListener, ChangeListener{
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 // data members
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 /** reference to task */
-@SuppressWarnings("rawtypes")
 private SimpleTask _task;
 /** this might be null. holds the image to display in a popup */
 private BufferedImage _img;
@@ -72,7 +73,7 @@ private void doInit() {
 }
 
 /** create a test task and wire it up with a task handler that dumps output to the textarea */
-@SuppressWarnings({ "unchecked", "rawtypes" })
+@SuppressWarnings("unchecked")
 private void _setupTask() {
 
   TaskExecutorIF<ByteBuffer> functor = new TaskExecutorAdapter<ByteBuffer>() {
@@ -85,7 +86,7 @@ private void _setupTask() {
       // set the license key
       MapLookup.setLicenseKey(ttfLicense.getText());
       // get the uri for the static map
-      String uri = MapLookup.getMap(Double.parseDouble(ttfLat.getText()),
+      String uri = MapLookup.getMap(LatSlider.getValue(),
                                     Double.parseDouble(ttfLon.getText()),
                                     Integer.parseInt(ttfSizeW.getText()),
                                     Integer.parseInt(ttfSizeH.getText()),
@@ -315,7 +316,10 @@ private void initComponents() {
   ttfProgressMsg = new JTextField();
   progressBar = new JProgressBar();
   lblProgressStatus = new JLabel();
-
+  LatSlider = new JSlider(0, 90);
+  LonSlider = new JSlider(-180, 180);
+  zoomSlider = new JSlider(0,19);
+  String lat = Integer.toString(LatSlider.getValue());
   //======== this ========
   setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
   setTitle("Google Static Maps");
@@ -350,6 +354,10 @@ private void initComponents() {
   			((TableLayout)panel1.getLayout()).setHGap(5);
   			((TableLayout)panel1.getLayout()).setVGap(5);
 
+  			
+  			
+  			
+  			
   			//---- label2 ----
   			label2.setText("Size Width");
   			label2.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -359,13 +367,46 @@ private void initComponents() {
   			ttfSizeW.setText("512");
   			panel1.add(ttfSizeW, new TableLayoutConstraints(1, 0, 1, 0, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
 
+  			//---- label3 ----
+  			label3.setText("Size Height");
+  			label3.setHorizontalAlignment(SwingConstants.RIGHT);
+  			panel1.add(label3, new TableLayoutConstraints(0, 1, 0, 1, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
+  		    
+  			
+  			//Add a function
+  			
+  		    LatSlider.setBorder(BorderFactory.createTitledBorder("Latitude"));
+  		    LatSlider.setMajorTickSpacing(25);
+  		    LatSlider.setMinorTickSpacing(5);
+  		    LatSlider.addChangeListener(this);
+  		    LatSlider.setToolTipText("Move the slider to adjust Latitude");
+
+  		    
+  		    LonSlider.setBorder(BorderFactory.createTitledBorder("Longitude"));
+  		    LonSlider.setMajorTickSpacing(25);
+  		    LonSlider.setMinorTickSpacing(5);
+  		    LonSlider.addChangeListener(this);
+  		    LonSlider.setToolTipText("Move the slider to adjust Longitude");
+  		    
+  		    zoomSlider.setBorder(BorderFactory.createTitledBorder("Zoom"));
+  		    zoomSlider.setMajorTickSpacing(5);
+  		    zoomSlider.setMinorTickSpacing(1);
+  		    zoomSlider.addChangeListener(this);
+  		    zoomSlider.setToolTipText("Move the slider to adjust zoom");
+	
+  			//double x = LatSlider.getMaximum();
+  			//---- ttfSizeH ----
+  			ttfSizeH.setText("512");
+  			panel1.add(ttfSizeH, new TableLayoutConstraints(1, 1, 1, 1, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
+
+  			
   			//---- label4 ----
   			label4.setText("Latitude");
   			label4.setHorizontalAlignment(SwingConstants.RIGHT);
-  			panel1.add(label4, new TableLayoutConstraints(2, 0, 2, 0, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
+  			panel1.add(LatSlider, new TableLayoutConstraints(2, 0, 2, 0, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
 
   			//---- ttfLat ----
-  			ttfLat.setText("38.931099");
+  			ttfLat.setText("45");
   			panel1.add(ttfLat, new TableLayoutConstraints(3, 0, 3, 0, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
 
   			//---- btnGetMap ----
@@ -379,22 +420,14 @@ private void initComponents() {
   			});
   			panel1.add(btnGetMap, new TableLayoutConstraints(5, 0, 5, 0, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
 
-  			//---- label3 ----
-  			label3.setText("Size Height");
-  			label3.setHorizontalAlignment(SwingConstants.RIGHT);
-  			panel1.add(label3, new TableLayoutConstraints(0, 1, 0, 1, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
-
-  			//---- ttfSizeH ----
-  			ttfSizeH.setText("512");
-  			panel1.add(ttfSizeH, new TableLayoutConstraints(1, 1, 1, 1, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
 
   			//---- label5 ----
   			label5.setText("Longitude");
   			label5.setHorizontalAlignment(SwingConstants.RIGHT);
-  			panel1.add(label5, new TableLayoutConstraints(2, 1, 2, 1, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
+  			panel1.add(LonSlider, new TableLayoutConstraints(2, 1, 2, 1, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
 
   			//---- ttfLon ----
-  			ttfLon.setText("-77.3489");
+  			ttfLon.setText("0");
   			panel1.add(ttfLon, new TableLayoutConstraints(3, 1, 3, 1, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
 
   			//---- btnQuit ----
@@ -421,10 +454,10 @@ private void initComponents() {
   			//---- label6 ----
   			label6.setText("Zoom");
   			label6.setHorizontalAlignment(SwingConstants.RIGHT);
-  			panel1.add(label6, new TableLayoutConstraints(2, 2, 2, 2, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
+  			panel1.add(zoomSlider, new TableLayoutConstraints(2, 2, 2, 2, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
 
   			//---- ttfZoom ----
-  			ttfZoom.setText("14");
+  			ttfZoom.setText("9");
   			panel1.add(ttfZoom, new TableLayoutConstraints(3, 2, 3, 2, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
   		}
   		contentPanel.add(panel1, new TableLayoutConstraints(0, 0, 0, 0, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
@@ -529,5 +562,72 @@ private JCheckBox checkboxSendStatus;
 private JTextField ttfProgressMsg;
 private JProgressBar progressBar;
 private JLabel lblProgressStatus;
+//Other implementations
+private JSlider LatSlider;
+private JSlider LonSlider;
+private JSlider zoomSlider;
 // JFormDesigner - End of variables declaration  //GEN-END:variables
+
+void addWindowsListener(Window w){
+	w.addWindowListener(this);
+}
+
+@Override
+public void windowActivated(WindowEvent arg0) {
+	// TODO Auto-generated method stub
+	
+}
+
+@Override
+public void windowClosed(WindowEvent arg0) {
+	// TODO Auto-generated method stub
+	
+}
+
+@Override
+public void windowClosing(WindowEvent arg0) {
+	// TODO Auto-generated method stub
+	
+}
+
+@Override
+public void windowDeactivated(WindowEvent arg0) {
+	// TODO Auto-generated method stub
+	
+}
+
+@Override
+public void windowDeiconified(WindowEvent arg0) {
+	// TODO Auto-generated method stub
+	
+}
+
+@Override
+public void windowIconified(WindowEvent arg0) {
+	// TODO Auto-generated method stub
+	
+}
+
+@Override
+public void windowOpened(WindowEvent arg0) {
+	// TODO Auto-generated method stub
+	
+}
+
+@Override
+public void actionPerformed(ActionEvent e) {
+
+}
+
+protected void update(){
+
+}
+
+public void stateChanged(ChangeEvent e) {
+    JSlider source = (JSlider)e.getSource();
+    	ttfLat.setText("" + LatSlider.getValue());
+    	ttfLon.setText("" + LonSlider.getValue());
+    	ttfZoom.setText("" + zoomSlider.getValue());
+    	panel1.add(ttfZoom, new TableLayoutConstraints(3, 2, 3, 2, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
+}
 }
