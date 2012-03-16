@@ -11,7 +11,9 @@ import Task.ProgressMonitor.*;
 import Task.Support.CoreSupport.*;
 import Task.Support.GUISupport.*;
 import com.jgoodies.forms.factories.*;
+
 import info.clearthought.layout.*;
+
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.methods.*;
 
@@ -29,8 +31,7 @@ import java.text.*;
 import java.util.concurrent.*;
 
 /** @author nazmul idris */
-public class SampleApp extends JFrame implements ActionListener,
-		WindowListener, ChangeListener {
+public class SampleApp extends JFrame implements ChangeListener {
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	// data members
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -219,7 +220,7 @@ public class SampleApp extends JFrame implements ActionListener,
 	}
 
 	private void _displayImgInFrame() {
-
+/*
 		final JFrame frame = new JFrame("Google Static Map");
 		GUIUtils.setAppIcon(frame, "71.png");// Sets the icon as check mark
 		frame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -251,7 +252,11 @@ public class SampleApp extends JFrame implements ActionListener,
 		frame.pack();
 
 		GUIUtils.centerOnScreen(frame);
-		frame.setVisible(true);
+		frame.setVisible(true);*/
+		mapPanel.removeAll();
+		mapPanel.repaint();
+		JLabel imgLbl=new JLabel(new ImageIcon(_img));
+		mapPanel.add(imgLbl);
 	}
 
 	private void _displayRespStrInFrame() {
@@ -354,8 +359,9 @@ public class SampleApp extends JFrame implements ActionListener,
 		progressBar = new JProgressBar();
 		lblProgressStatus = new JLabel();
 		//Own implemented objects
-		LatSlider = new JSlider(-90, 90);
-		LonSlider = new JSlider(-180, 180);
+		LatSlider = new DecimalSlider(-90, 90);
+		LonSlider = new DecimalSlider(-180, 180);
+
 		zoomSlider = new JSlider(0, 19);
 		// ======== this ========
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -420,6 +426,12 @@ public class SampleApp extends JFrame implements ActionListener,
 					LatSlider.setToolTipText("Move the slider to adjust Latitude");
 					LatSlider.addChangeListener(this);
 
+					LatSlider.addMouseListener(new MouseAdapter(){
+					public void mouseReleased(MouseEvent mouse){
+						startTaskAction();
+					}
+					});
+					
 					// A key Listener that checks whether a key has been
 					// pressed. example, number keys on the keyboard
 					// Partial credit goes to Bart Kiers
@@ -436,13 +448,16 @@ public class SampleApp extends JFrame implements ActionListener,
 							// number is a positive decimal number,
 							// if doesn't match, it returns nothing and does not
 							// change the slider
-							if (!typed.matches("\\d+?")) {
+							if (!typed.matches("(\\+|-)?(\\d+(\\.\\d*)?)")) {
+								
+								//LatSlider.setValue((int) 100);
 								return;
 							}
 							double value = Double.parseDouble(typed);
 							// sets the value of the typed in number and casts
 							// it from a double to an int
-							LatSlider.setValue((int) value);
+							LatSlider.setDoubleValue(value*10000);
+							//LatSlider.setValue((int) value*10000);
 						}
 					});
 
@@ -458,12 +473,18 @@ public class SampleApp extends JFrame implements ActionListener,
 						public void keyReleased(KeyEvent ke) {
 							String typed = ttfLon.getText();
 							// LatSlider.setValue(0);
-							if (!typed.matches("(\\+|-)?(\\d+?)")) {
+							if (!typed.matches("(\\+|-)?(\\d+(\\.\\d*)?)")) {
 								return;
 							}
 							double value = Double.parseDouble(typed);
-							LonSlider.setValue((int) value);
+							LonSlider.setDoubleValue(value*10000);
 						}
+					});
+					
+					LonSlider.addMouseListener(new MouseAdapter(){
+					public void mouseReleased(MouseEvent mouse){
+						startTaskAction();
+					}
 					});
 
 					zoomSlider.setBorder(BorderFactory.createTitledBorder("Zoom"));
@@ -484,7 +505,11 @@ public class SampleApp extends JFrame implements ActionListener,
 							zoomSlider.setValue(value);
 						}
 					});
-
+					zoomSlider.addMouseListener(new MouseAdapter(){
+					public void mouseReleased(MouseEvent mouse){
+						startTaskAction();
+					}
+					});
 					// double x = LatSlider.getMaximum();
 					// ---- ttfSizeH ----
 					ttfSizeH.setText("512");
@@ -580,7 +605,7 @@ public class SampleApp extends JFrame implements ActionListener,
 						TableLayoutConstraints.FULL));
 
 				// ======== scrollPane1 ========
-				{
+				/*{
 					scrollPane1
 							.setBorder(new TitledBorder(
 									"System.out - displays all status and progress messages, etc."));
@@ -596,7 +621,7 @@ public class SampleApp extends JFrame implements ActionListener,
 				contentPanel.add(scrollPane1, new TableLayoutConstraints(0, 1,
 						0, 1, TableLayoutConstraints.FULL,
 						TableLayoutConstraints.FULL));
-
+*/
 				// ======== panel2 ========
 				{
 					panel2.setOpaque(false);
@@ -662,15 +687,24 @@ public class SampleApp extends JFrame implements ActionListener,
 							1, 2, 1, TableLayoutConstraints.FULL,
 							TableLayoutConstraints.FULL));
 				}
-				contentPanel.add(panel2, new TableLayoutConstraints(0, 2, 0, 2,
-						TableLayoutConstraints.FULL,
-						TableLayoutConstraints.FULL));
+		  		contentPanel.add(panel2, new TableLayoutConstraints(0, 2, 0, 2, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
+		    	  //Vince's addition{
+		    	  mapPanel=new JPanel();
+		    	  mapPanel.setOpaque(false);
+		    	  mapPanel.setBorder(new CompoundBorder(new TitledBorder("Map will be displayed here"),Borders.DLU2_BORDER));
+		    	  mapPanel.setSize(640,640);
+		    	  contentPanel.add(mapPanel,new TableLayoutConstraints(0, 1, 0, 1, TableLayoutConstraints.FULL, TableLayoutConstraints.FULL));
+		    	  //}
 			}
 			dialogPane.add(contentPanel, BorderLayout.CENTER);
 		}
-		contentPane.add(dialogPane, BorderLayout.CENTER);
-		setSize(675, 485);
-		setLocationRelativeTo(null);
+		//Vince's addition{
+		  contentPane.add(dialogPane, BorderLayout.CENTER);
+		  Toolkit tk =  Toolkit.getDefaultToolkit ();
+		  Dimension dim = tk.getScreenSize();
+		  setSize(1024, dim.height-100);
+		  setLocationRelativeTo(null);
+		  //}
 		// JFormDesigner - End of component initialization
 		// //GEN-END:initComponents
 	}
@@ -705,70 +739,37 @@ public class SampleApp extends JFrame implements ActionListener,
 	private JProgressBar progressBar;
 	private JLabel lblProgressStatus;
 	// Other implementations
-	private JSlider LatSlider;
-	private JSlider LonSlider;
+	//private JSlider LatSlider;
+	//private JSlider LonSlider;
+	private DecimalSlider LatSlider;
+	private DecimalSlider LonSlider;
 	private JSlider zoomSlider;
-
+	private JPanel mapPanel;
 	// JFormDesigner - End of variables declaration //GEN-END:variables
 
-	void addWindowsListener(Window w) {
-		w.addWindowListener(this);
-	}
-
-	@Override
-	public void windowActivated(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void windowClosed(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void windowClosing(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void windowDeactivated(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void windowDeiconified(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void windowIconified(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void windowOpened(WindowEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-
-	}
 
 	protected void update() {
 
 	}
-//When the state of the slider is changed, change the text values inside the text fields
+	//When the state of the slider is changed, change the text values inside the text fields
 	public void stateChanged(ChangeEvent e) {
+		final DecimalFormat format = new DecimalFormat("0.####");
 		ttfZoom.setText("" + zoomSlider.getValue());
-		ttfLat.setText("" + LatSlider.getValue());
-		ttfLon.setText("" + LonSlider.getValue());
+		ttfLat.setText(format.format(LatSlider.getDoubleValue()));
+		ttfLon.setText(format.format(LonSlider.getDoubleValue()));
+
 	}
+	//Class Coded by Mark Aronin with reference to Bart Kiers's code
+		class DecimalSlider extends JSlider{
+			final int scale = 10000;
+			public DecimalSlider (int min, int max ){
+				super(min*10000, max*10000);
+			}
+			public double getDoubleValue(){
+				return ((double)super.getValue()/this.scale);
+			}
+			void setDoubleValue(double value){
+				super.setValue((int)value);
+			}
+		}
 }
